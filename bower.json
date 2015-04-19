@@ -16,9 +16,8 @@
     "package.json",
     "README.md"
   ],
-  "dependencies": {},
-  "devDependencies": {
-    "alzas-event-dispatcher": "master",
+  "dependencies": {
+    "event-dispatcher-js": "master",
     "fxos-websocket-server": "master"
   }
 }
