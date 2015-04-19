@@ -1,0 +1,24 @@
+{
+  "name": "fxos-remote-daemon",
+  "version": "0.0.1",
+  "homepage": "https://github.com/alzas/fxos-remote-daemon",
+  "authors": [
+    "Aleh Zasypkin <aleh.zasypkin@gmail.com>"
+  ],
+  "private": true,
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "src",
+    "bower.json",
+    "LICENSE",
+    "package.json",
+    "README.md"
+  ],
+  "dependencies": {},
+  "devDependencies": {
+    "alzas-event-dispatcher": "master",
+    "fxos-websocket-server": "master"
+  }
+}

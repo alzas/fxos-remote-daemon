@@ -1,0 +1,38 @@
+html,
+body {
+  font-size: 1rem;
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  padding: 1rem;
+
+  box-sizing: border-box;
+}
+
+label {
+  display: block;
+}
+
+input, button, select {
+  font-size: 2rem;
+  margin: 1rem 0;
+}
+
+.security-camera-preview {
+  top: 0;
+  left: 0;
+  height: 50%;
+  width: 50%;
+
+  position: absolute;
+}
+
+.photo-preview {
+  display: block;
+  height: 200px;
+  width: 100%;
+}
