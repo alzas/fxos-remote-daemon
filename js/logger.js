@@ -1,6 +1,4 @@
-/* global console,
-          EventDispatcher
-*/
+/* global EventDispatcher */
 
 (function(exports) {
   'use strict';

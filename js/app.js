@@ -2,13 +2,12 @@
           Logger,
           PeerConnection,
           Transport,
-          FxOSWebSocket
+          FxOSWebSocket,
+          Scheduler
 */
 
 (function(exports) {
   'use strict';
-
-  var stopAlarms = false;
 
   var getUserMedia = (
     navigator.mozGetUserMedia ||
@@ -22,6 +21,10 @@
   };
 
   function send(applicationMessage, blobs) {
+    if (!connections.websocket) {
+      return;
+    }
+
     Transport.send(applicationMessage, blobs).then(function(dataToSend) {
       connections.websocket.send(dataToSend);
     });
@@ -228,105 +231,80 @@
     }
   }
 
-  function addAlarm(interval, type) {
-    return new Promise(function(resolve, reject) {
-      var nextDate = getNextDate(interval, type);
+  function closeWebSocketServer() {
+    if (connections.websocket) {
+      connections.websocket.stop();
 
-      var request = navigator.mozAlarms.add(
-        nextDate, 'honorTimezone', { interval: interval, type: type }
-      );
+      connections.websocket.offAll('message');
+      connections.websocket.offAll('stop');
 
-      request.onsuccess = function() {
-        Logger.log('Scheduled new alarm at: %s', nextDate);
-
-        resolve({
-          id: this.result,
-          date: nextDate
-        });
-      };
-
-      request.onerror = function() {
-        Logger.error('Schedule failed', this.error);
-
-        reject(this.error);
-      };
-    });
-  }
-
-  function getNextDate(value, type) {
-    var now = new Date();
-
-    switch(type) {
-      case 'sec':
-        now.setSeconds(now.getSeconds() + value);
-        break;
-      case 'min':
-        now.setMinutes(now.getMinutes() + value);
-        break;
-      case 'hour':
-        now.setHours(now.getHours() + value);
-        break;
-      default:
-        throw new Error('Unknown interval type ' + type);
+      connections.websocket = null;
     }
-
-    return now;
   }
 
   exports.addEventListener('load', function() {
-    var scheduleBtn = document.getElementById('schedule');
-    var stopBtn = document.getElementById('stop');
+    var enableRemoteConnection = document.getElementById(
+      'enable-remote-connection'
+    );
 
-    var intervalValueInput = document.getElementById('interval-value');
-    var intervalTypeSelect = document.getElementById('interval-type');
+    var schedulerControls = {
+      schedule: document.getElementById('schedule'),
+      stop: document.getElementById('stop'),
+      intervalValue: document.getElementById('interval-value'),
+      intervalType: document.getElementById('interval-type')
+    };
 
     function toggleInputs(toggle) {
-      scheduleBtn.disabled = !toggle;
-      intervalValueInput.disabled = !toggle;
-      intervalTypeSelect.disabled = !toggle;
-      stopBtn.disabled = toggle;
+      schedulerControls.schedule.disabled = !toggle;
+      schedulerControls.intervalValue.disabled = !toggle;
+      schedulerControls.intervalType.disabled = !toggle;
+      schedulerControls.stop.disabled = toggle;
     }
 
-    navigator.mozSetMessageHandler('alarm', function (alarm) {
-      if (stopAlarms) {
-        return;
-      }
-
-      Camera.takePicture(Camera.Types.BACK).catch(function(e) {
-        Logger.error(e);
-      }).then(function() {
-        addAlarm(alarm.data.interval, alarm.data.type);
-      });
+    Scheduler.isScheduled('take-picture').then(function(isScheduled) {
+      toggleInputs(!isScheduled);
     });
 
-    scheduleBtn.addEventListener('click', function() {
-      var interval = Number.parseInt(intervalValueInput.value, 10);
-      var type = intervalTypeSelect.value;
+    schedulerControls.schedule.addEventListener('click', function() {
+      var interval = Number.parseInt(schedulerControls.intervalValue.value, 10);
+      var type = schedulerControls.intervalType.value;
 
-      stopAlarms = false;
-
-      addAlarm(interval, type).then(function() {
+      Scheduler.schedule('take-picture', interval, type).then(function() {
         toggleInputs(false);
-      }, function(e) {
-        alert(e);
+      });
+
+      Scheduler.on('take-picture-fired', function() {
+        Camera.takePicture(Camera.Types.BACK).then(function(result) {
+          send({
+            type: 'camera',
+            method: 'picture'
+          }, [result.blob]);
+        }, function(e) {
+          Logger.error(e);
+        });
       });
     });
 
-    stopBtn.addEventListener('click', function() {
-      stopAlarms = true;
+    schedulerControls.stop.addEventListener('click', function() {
+      Scheduler.stop('take-picture');
+      Scheduler.offAll('take-picture-fired');
 
       toggleInputs(true);
     });
 
-    /*document.addEventListener('visibilitychange', function() {
-      if (document.hidden) {
-        previewVideo.pause();
-      } else {
-        previewVideo.play();
-      }
-    });*/
+    enableRemoteConnection.addEventListener('change', function() {
+      if (enableRemoteConnection.checked) {
+        connections.websocket = new FxOSWebSocket.Server(8008);
 
-    connections.websocket = new FxOSWebSocket.Server(8008);
-    connections.websocket.on('message', onWebSocketMessage);
+        connections.websocket.on('message', onWebSocketMessage);
+        connections.websocket.on('stop', function() {
+          closeWebSocketServer();
+
+          enableRemoteConnection.checked = false;
+        });
+      } else {
+        closeWebSocketServer();
+      }
+    });
   });
 })(window);
