@@ -4,7 +4,8 @@
           Transport,
           FxOSWebSocket,
           Scheduler,
-          Storage
+          Storage,
+          Notifier
 */
 
 (function(exports) {
@@ -356,5 +357,11 @@
     wifiManager.onstatuschange = updateRemoteHost;
     wifiManager.onconnectioninfoupdate = updateRemoteHost;
     wifiManager.onstationinfoupdate = updateRemoteHost;
+
+    navigator.battery.addEventListener('levelchange', function() {
+      if (navigator.battery.level < 0.15) {
+        Notifier.notify(15);
+      }
+    });
   });
 })(window);

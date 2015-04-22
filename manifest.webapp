@@ -18,7 +18,8 @@
     "systemXHR": {},
     "tcp-socket": {},
     "backgroundservice": {},
-    "wifi-manage":{}
+    "wifi-manage":{},
+    "audio-channel-notification": {}
   },
   "installs_allowed_from": [
     "*"
