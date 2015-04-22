@@ -17,7 +17,8 @@
     "power":{},
     "systemXHR": {},
     "tcp-socket": {},
-    "backgroundservice": {}
+    "backgroundservice": {},
+    "wifi-manage":{}
   },
   "installs_allowed_from": [
     "*"

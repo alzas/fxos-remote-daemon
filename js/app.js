@@ -3,7 +3,8 @@
           PeerConnection,
           Transport,
           FxOSWebSocket,
-          Scheduler
+          Scheduler,
+          Storage
 */
 
 (function(exports) {
@@ -14,6 +15,8 @@
     navigator.webkitGetUserMedia ||
     navigator.getUserMedia
   ).bind(navigator);
+
+  var wifiManager = navigator.mozWifiManager;
 
   var connections = window.connections = {
     websocket: null,
@@ -229,24 +232,49 @@
 
       return;
     }
+
+    if (request.type === 'storage') {
+      if (request.method === 'list') {
+        Storage.list('remote-daemon').then(function(files) {
+          var page = 0;
+          while(files.length) {
+            var filesForPage = files.splice(0, request.pageSize);
+            send({
+              type: 'storage',
+              method: 'list',
+              value: {
+                names: filesForPage.map(function(file) {
+                  return file.name.substring(file.name.lastIndexOf('/') + 1);
+                }),
+                page: page++,
+                pageSize: request.pageSize
+              }
+            }, filesForPage);
+          }
+        });
+        return;
+      }
+
+      if (request.method === 'delete') {
+        Storage.delete('remote-daemon/' + request.value);
+        return;
+      }
+      return;
+    }
   }
 
   function closeWebSocketServer() {
     if (connections.websocket) {
-      connections.websocket.stop();
-
       connections.websocket.offAll('message');
       connections.websocket.offAll('stop');
+
+      connections.websocket.stop();
 
       connections.websocket = null;
     }
   }
 
   exports.addEventListener('load', function() {
-    var enableRemoteConnection = document.getElementById(
-      'enable-remote-connection'
-    );
-
     var schedulerControls = {
       schedule: document.getElementById('schedule'),
       stop: document.getElementById('stop'),
@@ -254,11 +282,25 @@
       intervalType: document.getElementById('interval-type')
     };
 
+    var remoteConnectionControls = {
+      host: document.getElementById('remote-host-address'),
+      enableConnection: document.getElementById('enable-remote-connection')
+    };
+
     function toggleInputs(toggle) {
       schedulerControls.schedule.disabled = !toggle;
       schedulerControls.intervalValue.disabled = !toggle;
       schedulerControls.intervalType.disabled = !toggle;
       schedulerControls.stop.disabled = toggle;
+    }
+
+    function updateRemoteHost() {
+      if (wifiManager.connectionInformation) {
+        remoteConnectionControls.host.textContent =
+          wifiManager.connectionInformation.ipAddress;
+      } else {
+        remoteConnectionControls.host.textContent = 'Turn Wi-Fi on';
+      }
     }
 
     Scheduler.isScheduled('take-picture').then(function(isScheduled) {
@@ -292,19 +334,27 @@
       toggleInputs(true);
     });
 
-    enableRemoteConnection.addEventListener('change', function() {
-      if (enableRemoteConnection.checked) {
+    remoteConnectionControls.enableConnection.addEventListener('change',
+    function() {
+      if (remoteConnectionControls.enableConnection.checked) {
         connections.websocket = new FxOSWebSocket.Server(8008);
 
         connections.websocket.on('message', onWebSocketMessage);
         connections.websocket.on('stop', function() {
           closeWebSocketServer();
 
-          enableRemoteConnection.checked = false;
+          remoteConnectionControls.enableConnection.checked = false;
         });
       } else {
         closeWebSocketServer();
       }
     });
+
+    updateRemoteHost();
+
+    wifiManager.onenabled = wifiManager.ondisabled = updateRemoteHost;
+    wifiManager.onstatuschange = updateRemoteHost;
+    wifiManager.onconnectioninfoupdate = updateRemoteHost;
+    wifiManager.onstationinfoupdate = updateRemoteHost;
   });
 })(window);

@@ -1,4 +1,6 @@
-/* global Logger */
+/* global Logger,
+          Storage
+*/
 
 (function(exports) {
   'use strict';
@@ -51,32 +53,23 @@
   }
 
   function takePicture(camera) {
+    var date = new Date();
+
+    var dateString = date.getDate() + '-' + date.getMonth() + '-' +
+      date.getFullYear() + '_' + date.getHours() + '-' + date.getMinutes() + '-' +
+      date.getSeconds();
+
     return camera.takePicture({
-      dateTime: Date.now() / 1000,
+      dateTime: date.getTime() / 1000,
       pictureSize: { width: 2592, height: 1944},
       fileFormat: 'jpeg',
       rotation: 0
     }).then(function(blob) {
-      return savePicture(blob).then(function(path) {
-        camera.resumePreview();
-        return { blob: blob, path: path };
-      });
-    });
-  }
-
-  function savePicture(blob) {
-    var sdCard = navigator.getDeviceStorages('sdcard')[0];
-    var fileName = 'remote-daemon/' + Date.now() + '.jpg';
-
-    return sdCard.addNamed(blob, fileName).then(function(path) {
-      Logger.log(
-        'File "%s" successfully wrote on the sdCard storage area', path
-      );
-      return path;
-    }, function(e) {
-      Logger.warn('Unable to write the file: %s', e);
-
-      throw e;
+      return Storage.save('remote-daemon/' + dateString + '.jpg', blob)
+        .then(function(path) {
+          camera.resumePreview();
+          return { blob: blob, path: path };
+        });
     });
   }
 
