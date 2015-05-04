@@ -78,32 +78,21 @@
     Scheduler.isScheduled('take-picture').then(function(isScheduled) {
       toggleInputs(!isScheduled);
     });
+    CameraModule.on('tracking-scheduled', () => toggleInputs(false));
+    CameraModule.on('tracking-stopped', () => toggleInputs(true));
 
     schedulerControls.schedule.addEventListener('click', function() {
-      var interval = Number.parseInt(schedulerControls.intervalValue.value, 10);
-      var type = schedulerControls.intervalType.value;
-
-      Scheduler.schedule('take-picture', interval, type).then(function() {
-        toggleInputs(false);
-      });
-
-      Scheduler.on('take-picture-fired', function() {
-        Camera.takePicture(Camera.Types.BACK).then(function(result) {
-          send({
-            type: 'camera',
-            method: 'picture'
-          }, [result.blob]);
-        }, function(e) {
-          Logger.error(e);
-        });
-      });
+      CameraModule.process({
+        method: 'tracking-start',
+        value: {
+          interval: Number.parseInt(schedulerControls.intervalValue.value, 10),
+          type: schedulerControls.intervalType.value
+        }
+      }, send);
     });
 
     schedulerControls.stop.addEventListener('click', function() {
-      Scheduler.stop('take-picture');
-      Scheduler.offAll();
-
-      toggleInputs(true);
+      CameraModule.process({ method: 'tracking-stop' }, send);
     });
 
     remoteConnectionControls.enableConnection.addEventListener('change',
