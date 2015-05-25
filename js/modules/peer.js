@@ -28,7 +28,8 @@
             mandatory: {
               facingMode: request.facingMode
             }
-          }
+          },
+          audio: true
         };
 
         getUserMedia(mediaConstraints, function(stream) {

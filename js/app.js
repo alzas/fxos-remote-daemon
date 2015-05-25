@@ -16,6 +16,11 @@
 (function(exports) {
   'use strict';
 
+  if (!window.EventDispatcher) {
+    alert('Please run "bower install" before you install the app!');
+    window.close();
+  }
+
   var requestProcessors = new Map([
     ['battery', BatteryModule],
     ['camera', CameraModule],
