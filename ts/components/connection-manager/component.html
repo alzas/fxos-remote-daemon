@@ -1,0 +1,7 @@
+<section>
+<label>
+  <input #connectionstatus (change)="toggleConnection(connectionstatus.checked)" type="checkbox" [checked]="isConnectionEnabled" />
+  Enable remote connection
+</label>
+<span id="remote-host-address">{{address}}</span>
+</section>

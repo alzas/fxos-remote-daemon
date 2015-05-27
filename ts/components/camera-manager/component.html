@@ -1,0 +1,13 @@
+<section>
+  <header><p>Take picture every: </header>
+  <input #interval type="number" />
+  <select #type>
+    <option *ng-for="#interval of intervals" value="{{interval.value}}">
+      {{ interval.label }}
+    </option>
+  </select>
+  <button [disabled]="isScheduled" (click)="schedule(interval.value, type.value)" type="button">
+    Schedule
+  </button>
+  <button [disabled]="!isScheduled" (click)="stop()" type="button">Stop</button>
+</section>

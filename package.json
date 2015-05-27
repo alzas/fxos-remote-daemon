@@ -1,0 +1,24 @@
+{
+  "name": "fxos-remote-manager",
+  "version": "1.0.0",
+  "description": "",
+  "license": "MIT",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "del": "^1.1.1",
+
+    "gulp-typescript": "~2.7.5",
+    "gulp-plumber": "~1.0.1",
+    "gulp-sourcemaps": "~1.5.2",
+    "systemjs-builder": "^0.10.6",
+    "typescript": "~1.5.0-beta"
+  },
+
+  "dependencies": {
+    "angular2": "~2.0.0-alpha.25",
+    "systemjs": "^0.15.0",
+    "es6-module-loader": "^0.15.0",
+    "zone.js": "^0.4.1",
+    "reflect-metadata": "0.1.0"
+  }
+}

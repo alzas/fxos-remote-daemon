@@ -1,2 +1,7 @@
 .idea
-components
+
+dev
+lib
+node_modules
+
+/components
