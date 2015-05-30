@@ -1,33 +1,21 @@
-/// <reference path="../../typings/mozilla/navigator.d.ts" />
+import WifiManager from 'api/wifi-manager';
+import EventDispatcher from 'classes/event-dispatcher';
+import FxOSWebSocket from 'fxos-websocket/server.es6';
+import Transport from 'classes/transport';
+import Logger from 'classes/logger';
 
-class StubWifiManager implements WifiManager {
-  connectionInformation: WifiConnectionInfo;
-
-  constructor(address: string) {
-    this.connectionInformation = {
-      ipAddress: address
-    };
-  }
-
-  onenabled() {}
-  ondisabled() {}
-  onstatuschange() {}
-  onconnectioninfoupdate() {}
-  onstationinfoupdate() {}
-}
-
-class ConnectionService {
-  private manager: WifiManager;
+class ConnectionService extends EventDispatcher {
   private address: string;
+  private connection: any;
 
   constructor() {
-    this.manager = navigator.mozWifiManager || new StubWifiManager('192.168');
+    super(['address-updated', 'request', 'listen', 'close']);
 
-    this.manager.onenabled = this.updateAddress.bind(this);
-    this.manager.ondisabled = this.updateAddress.bind(this);
-    this.manager.onstatuschange = this.updateAddress.bind(this);
-    this.manager.onstationinfoupdate = this.updateAddress.bind(this);
-    this.manager.onconnectioninfoupdate = this.updateAddress.bind(this);
+    WifiManager.onenabled = this.updateAddress.bind(this);
+    WifiManager.ondisabled = this.updateAddress.bind(this);
+    WifiManager.onstatuschange = this.updateAddress.bind(this);
+    WifiManager.onstationinfoupdate = this.updateAddress.bind(this);
+    WifiManager.onconnectioninfoupdate = this.updateAddress.bind(this);
 
     this.updateAddress();
   }
@@ -36,12 +24,53 @@ class ConnectionService {
     return this.address;
   }
 
-  public enable() {}
+  public listen() {
+    if (!this.address) {
+      throw new Error('WiFi Connection is not established!');
+    }
 
-  public disable() {}
+    if (this.connection) {
+      return;
+    }
+
+    this.connection = new FxOSWebSocket.Server(8008);
+
+    this.connection.on('message', (e) => {
+      var request = Transport.receive(e).message;
+
+      Logger.log('Fx-Message-Received: %s', JSON.stringify(request));
+
+      this.emit('request', request);
+    });
+
+    this.connection.on('stop', () => {
+      Logger.log('Fx-Connection-Closed');
+      this.close();
+    });
+
+    this.emit('listen');
+  }
+
+  public close() {
+    if (!this.connection) {
+      return;
+    }
+
+    this.connection.offAll();
+    this.connection.stop();
+    this.connection = null;
+
+    this.emit('close');
+  }
 
   private updateAddress() {
-    this.address = this.manager.connectionInformation.ipAddress;
+    if (WifiManager.connectionInformation) {
+      this.address = WifiManager.connectionInformation.ipAddress;
+    } else {
+      this.address = '';
+    }
+
+    this.emit('address-updated', this.address);
   }
 }
 

@@ -7,7 +7,7 @@
     "url": "aleh.zasypkin@gmail.com"
   },
   "type": "certified",
-  "launch_path": "/index.html",
+  "launch_path": "/index-ts.html",
   "permissions": {
     "device-storage:sdcard":{ "access": "readwrite" },
     "camera":{},

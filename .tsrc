@@ -1,8 +1,7 @@
 {
   "version": "1.5.0",
   "compilerOptions": {
-    "target": "es5",
-    "module": "commonjs",
+    "target": "es6",
     "declaration": false,
     "noImplicitAny": false,
     "removeComments": true,

@@ -1,9 +1,9 @@
-interface WifiConnectionInfo {
+interface IWifiConnectionInfo {
   ipAddress: string;
 }
 
-interface WifiManager {
-  connectionInformation: WifiConnectionInfo;
+interface IWifiManager {
+  connectionInformation: IWifiConnectionInfo;
 
   onenabled(): void;
   ondisabled(): void,
@@ -12,6 +12,11 @@ interface WifiManager {
   onstationinfoupdate(): void
 }
 
+interface ITcpSocket {
+
+}
+
 interface Navigator {
-  mozWifiManager: WifiManager
+  mozWifiManager: IWifiManager,
+  mozTcpSocket: ITcpSocket
 }

@@ -5,3 +5,6 @@ lib
 node_modules
 
 /components
+
+/ts/**/*.js
+/ts/**/*.map

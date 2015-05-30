@@ -19,16 +19,24 @@ class ConnectionManagerComponent {
   constructor() {
     this.isConnectionEnabled = false;
     this.service = new ConnectionService();
+
+    this.service.on('address-updated', this.onAddressChanged.bind(this));
+
+    this.service.on('listen', () => {
+      this.isConnectionEnabled = true;
+    });
+
+    this.service.on('close', () => {
+      this.isConnectionEnabled = false;
+    });
   }
 
-  toggleConnection(toggle:boolean) {
+  toggleConnection(toggle: boolean) {
     if (toggle) {
-      this.service.enable();
+      this.service.listen();
     } else {
-      this.service.disable();
+      this.service.close();
     }
-
-    this.isConnectionEnabled = toggle;
 
     this.onAddressChanged();
   }
