@@ -1,5 +1,8 @@
 /// <reference path="../../../typings/angular2/angular2.d.ts" />
+
 import {Component, View, NgFor} from 'angular2/angular2';
+
+import CameraService from 'services/camera';
 
 const INTERVALS = [{
   value: 'sec',
@@ -10,6 +13,17 @@ const INTERVALS = [{
 }, {
   value: 'hour',
   label: 'hour'
+}];
+
+const FLASH_MODES = [{
+  value: 'on',
+  label: 'On'
+}, {
+  value: 'off',
+  label: 'Off'
+}, {
+  value: 'torch',
+  label: 'Torch'
 }];
 
 @Component({
@@ -24,15 +38,25 @@ const INTERVALS = [{
 class CameraManagerComponent {
   isScheduled: boolean;
   intervals: Array<Object>;
+  flashModes: Array<Object>;
 
   constructor() {
     this.isScheduled = false;
 
     this.intervals = INTERVALS;
+    this.flashModes = FLASH_MODES;
   }
 
   schedule(interval:string, type:string) {
     this.isScheduled = true;
+  }
+
+  setFlashMode(mode: string) {
+    CameraService.setFlashMode('back', mode);
+  }
+
+  releaseCamera() {
+    CameraService.release('back');
   }
 
   stop() {

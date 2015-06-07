@@ -25,7 +25,7 @@
     "*"
   ],
   "messages": [
-    { "alarm": "/index.html" }
+    { "alarm": "/index-ts.html" }
   ],
   "locales": {
     "en-US": {

@@ -1,8 +1,8 @@
 /// <reference path="../../typings/mozilla/window.d.ts" />
 
 interface IEventDispatcher {
-  on(eventName: string, handler: () => void): void;
-  off(eventName: string, handler: () => void): void;
+  on(eventName: string, handler: (any?) => void): void;
+  off(eventName: string, handler: (any?) => void): void;
   offAll(eventName?: string): void;
   emit(eventName: string, parameters?: any): void;
 }
@@ -10,7 +10,7 @@ interface IEventDispatcher {
 // Implements publish/subscribe behaviour that can be applied to any object,
 // so that object can be listened for custom events. "this" context is the
 // object with Map "listeners" property used to store handlers.
-export default class EvenDispatcher implements IEventDispatcher {
+export default class EventDispatcher implements IEventDispatcher {
   private listeners: Map<string, Set<(parameters?: any) => void>>;
   private allowedEvents: Array<string>;
 
@@ -21,7 +21,7 @@ export default class EvenDispatcher implements IEventDispatcher {
 
     this.allowedEvents = allowedEvents || null;
 
-    this.listeners = new Map<string, Set<() => void>>();
+    this.listeners = new Map<string, Set<(any?) => void>>();
   }
 
   /**
@@ -29,15 +29,15 @@ export default class EvenDispatcher implements IEventDispatcher {
    * @param {string} eventName Name of the event to listen for.
    * @param {function} handler Handler to be executed once event occurs.
    */
-  on(eventName: string, handler: () => void) {
-    EvenDispatcher.ensureValidEventName(eventName);
+  on(eventName: string, handler: (any?) => void) {
+    EventDispatcher.ensureValidEventName(eventName);
     this.ensureAllowedEventName(eventName);
-    EvenDispatcher.ensureValidHandler(handler);
+    EventDispatcher.ensureValidHandler(handler);
 
     var handlers = this.listeners.get(eventName);
 
     if (!handlers) {
-      handlers = new Set<() => void>();
+      handlers = new Set<(any?) => void>();
       this.listeners.set(eventName, handlers);
     }
 
@@ -51,10 +51,10 @@ export default class EvenDispatcher implements IEventDispatcher {
    * @param {function} handler Handler to remove, so it won't be executed
    * next time event occurs.
    */
-  off(eventName: string, handler: () => void) {
-    EvenDispatcher.ensureValidEventName(eventName);
+  off(eventName: string, handler: (any?) => void) {
+    EventDispatcher.ensureValidEventName(eventName);
     this.ensureAllowedEventName(eventName);
-    EvenDispatcher.ensureValidHandler(handler);
+    EventDispatcher.ensureValidHandler(handler);
 
     var handlers = this.listeners.get(eventName);
 
@@ -79,7 +79,7 @@ export default class EvenDispatcher implements IEventDispatcher {
       return;
     }
 
-    EvenDispatcher.ensureValidEventName(eventName);
+    EventDispatcher.ensureValidEventName(eventName);
     this.ensureAllowedEventName(eventName);
 
     var handlers = this.listeners.get(eventName);
@@ -101,7 +101,7 @@ export default class EvenDispatcher implements IEventDispatcher {
    * every registered handler.
    */
   emit(eventName: string, parameters?: any) {
-    EvenDispatcher.ensureValidEventName(eventName);
+    EventDispatcher.ensureValidEventName(eventName);
     this.ensureAllowedEventName(eventName);
 
     var handlers = this.listeners.get(eventName);

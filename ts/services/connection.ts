@@ -1,15 +1,19 @@
-import WifiManager from 'api/wifi-manager';
-import EventDispatcher from 'classes/event-dispatcher';
 import FxOSWebSocket from 'fxos-websocket/server.es6';
+
+import WifiManager from 'api/wifi-manager';
+
+import EventDispatcher from 'classes/event-dispatcher';
 import Transport from 'classes/transport';
-import Logger from 'classes/logger';
+import ServicePacket from 'classes/service-packet';
+
+import LoggerService from 'services/logger';
 
 class ConnectionService extends EventDispatcher {
   private address: string;
   private connection: any;
 
   constructor() {
-    super(['address-updated', 'request', 'listen', 'close']);
+    super(['address-updated', 'packet', 'listen', 'close']);
 
     WifiManager.onenabled = this.updateAddress.bind(this);
     WifiManager.ondisabled = this.updateAddress.bind(this);
@@ -35,23 +39,25 @@ class ConnectionService extends EventDispatcher {
 
     this.connection = new FxOSWebSocket.Server(8008);
 
-    this.connection.on('message', (e) => {
-      var request = Transport.receive(e).message;
+    this.connection.on('message', (websocketMessage) => {
+      var packet = Transport.receive(websocketMessage);
 
-      Logger.log('Fx-Message-Received: %s', JSON.stringify(request));
+      LoggerService.log(
+        'Fx-Message-Received: %s', JSON.stringify(packet.message)
+      );
 
-      this.emit('request', request);
+      this.emit('packet', packet);
     });
 
     this.connection.on('stop', () => {
-      Logger.log('Fx-Connection-Closed');
-      this.close();
+      LoggerService.log('Fx-Connection-Closed');
+      this.stopListening();
     });
 
     this.emit('listen');
   }
 
-  public close() {
+  public stopListening() {
     if (!this.connection) {
       return;
     }
@@ -61,6 +67,16 @@ class ConnectionService extends EventDispatcher {
     this.connection = null;
 
     this.emit('close');
+  }
+
+  public send(packet: ServicePacket) {
+    if (!this.connection) {
+      throw new Error('Connection is not established!');
+    }
+
+    Transport.send(packet).then((websocketMessage) => {
+      this.connection.send(websocketMessage);
+    });
   }
 
   private updateAddress() {
@@ -74,4 +90,4 @@ class ConnectionService extends EventDispatcher {
   }
 }
 
-export default ConnectionService;
+export default new ConnectionService();

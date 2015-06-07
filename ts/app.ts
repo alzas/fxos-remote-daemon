@@ -1,11 +1,19 @@
 /// <reference path="../typings/angular2/angular2.d.ts" />
-import {Component, View, bootstrap, ChangeDetection, DynamicChangeDetection}
-    from 'angular2/angular2';
+import {
+    Component,
+    View,
+    ChangeDetection,
+    DynamicChangeDetection,
+    bootstrap
+} from 'angular2/angular2';
+
 import { bind } from 'angular2/di';
+
 import CameraManagerComponent from 'components/camera-manager/component';
-import ConnectionManagerComponent
-    from 'components/connection-manager/component';
-import {StringValidator} from 'classes/module';
+
+import
+    ConnectionManagerComponent
+from 'components/connection-manager/component';
 
 @Component({
   selector: 'fxos-remote-daemon'

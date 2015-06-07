@@ -2,6 +2,8 @@
 
 import FxOSWebSocket from 'fxos-websocket/server.es6';
 
+import TransportPacket from 'classes/transport-packet';
+
 interface IJoinedBlob {
   totalSize: number;
   meta: Array<{
@@ -50,17 +52,17 @@ function joinBlobs(blobs: Array<Blob>) : Promise<IJoinedBlob> {
 }
 
 export default {
-  send(message: any, blobs: Array<Blob>) : Promise<Uint8Array> {
-    var blobsJoinPromise = !blobs || !blobs.length ?
-        Promise.resolve<IJoinedBlob>(null) : joinBlobs(blobs);
+  send(packet: TransportPacket<any>) : Promise<Uint8Array> {
+    var blobsJoinPromise = !packet.blobs || !packet.blobs.length ?
+        Promise.resolve<IJoinedBlob>(null) : joinBlobs(packet.blobs);
 
     return blobsJoinPromise.then(function(blobs) {
       if (blobs) {
-        message.__blobs = blobs.meta;
+        packet.message.__blobs = blobs.meta;
       }
 
       var serializedApplicationMessage = FxOSWebSocket.Utils.stringToArray(
-        JSON.stringify(message)
+        JSON.stringify(packet.message)
       );
 
       var applicationMessageLength = serializedApplicationMessage.length;
@@ -84,7 +86,7 @@ export default {
     });
   },
 
-  receive(messageData: Array<number>) {
+  receive(messageData: Array<number>): TransportPacket<any> {
     var data = new Uint8Array(messageData);
     var dataOffset = 2;
     var applicationMessageLength = (data[0] << 8) + data[1];
@@ -109,9 +111,6 @@ export default {
       delete applicationMessage.__blobs;
     }
 
-    return {
-      message: applicationMessage,
-      blobs: blobs
-    };
+    return new TransportPacket(applicationMessage, blobs);
   }
 }

@@ -10,4 +10,14 @@
     Schedule
   </button>
   <button [disabled]="!isScheduled" (click)="stop()" type="button">Stop</button>
+
+  <section>
+    <p>Flash mode</p>
+    <select #flashmode (change)="setFlashMode(flashmode.value)">
+      <option *ng-for="#mode of flashModes" value="{{mode.value}}">
+        {{ mode.label }}
+      </option>
+    </select>
+    <button (click)="releaseCamera()">Release camera</button>
+  </section>
 </section>
